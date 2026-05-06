@@ -1,0 +1,1385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Deva Scripts — Premium Writing & Printing Services</title>
+<meta name="description" content="Premium handwritten notes, school & college projects, printing and all writing work. Fast, neat, professional.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════
+   ROOT & RESET
+═══════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#0a0a1a;
+  --ink2:#0f0f28;
+  --ink3:#141432;
+  --v1:#6f2dfa;  /* vivid violet */
+  --v2:#9b51f5;
+  --v3:#c084fc;
+  --b1:#1d9bf0;  /* blue accent */
+  --b2:#38bdf8;
+  --cy:#06b6d4;
+  --pi:#e879f9;  /* pink pop */
+  --wa:#25d366;
+  --txt:#f1f0ff;
+  --txt2:rgba(241,240,255,.55);
+  --txt3:rgba(241,240,255,.28);
+  --bdr:rgba(111,45,250,.22);
+  --bdr2:rgba(56,189,248,.18);
+  --surf:rgba(255,255,255,.04);
+  --surf2:rgba(255,255,255,.07);
+  --r:20px;--rs:12px;
+  --gv:linear-gradient(135deg,var(--v1),var(--b1));
+  --gv2:linear-gradient(135deg,var(--v1),var(--pi));
+  --gv3:linear-gradient(135deg,var(--b1),var(--cy));
+}
+html{scroll-behavior:smooth;-webkit-tap-highlight-color:transparent}
+body{font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--txt);overflow-x:hidden;min-height:100vh}
+img{display:block;max-width:100%}
+button,input,select,textarea{font-family:inherit}
+
+/* ═══════════════════════════════════════════
+   CANVAS BG — particles + mesh
+═══════════════════════════════════════════ */
+#bgCanvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+.mesh{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 80% 60% at 10% 0%,   rgba(111,45,250,.13) 0%,transparent 55%),
+    radial-gradient(ellipse 60% 50% at 90% 15%,  rgba(29,155,240,.10) 0%,transparent 50%),
+    radial-gradient(ellipse 50% 60% at 20% 80%,  rgba(6,182,212,.08)  0%,transparent 55%),
+    radial-gradient(ellipse 70% 50% at 80% 90%,  rgba(232,121,249,.09)0%,transparent 50%),
+    var(--ink);
+}
+.noise{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.032;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:200px}
+.gridlines{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(rgba(111,45,250,.035) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(111,45,250,.035) 1px,transparent 1px);
+  background-size:50px 50px;
+  -webkit-mask-image:radial-gradient(ellipse 80% 80% at 50% 40%,black,transparent);
+  mask-image:radial-gradient(ellipse 80% 80% at 50% 40%,black,transparent);
+}
+
+/* ═══════════════════════════════════════════
+   SCROLLBAR
+═══════════════════════════════════════════ */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--ink2)}
+::-webkit-scrollbar-thumb{background:var(--v1);border-radius:4px}
+
+/* ═══════════════════════════════════════════
+   NAV
+═══════════════════════════════════════════ */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:300;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px;height:58px;
+  background:rgba(10,10,26,.82);
+  border-bottom:1px solid var(--bdr);
+  backdrop-filter:blur(24px) saturate(160%);
+  -webkit-backdrop-filter:blur(24px) saturate(160%);
+  transition:background .3s;
+}
+.nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-logo-ring{
+  width:36px;height:36px;border-radius:50%;padding:2px;
+  background:conic-gradient(from 0deg,var(--v1),var(--b1),var(--pi),var(--v1));
+  animation:spin 5s linear infinite;flex-shrink:0;
+}
+.nav-logo-inner{
+  width:100%;height:100%;border-radius:50%;overflow:hidden;
+  background:var(--ink2);display:flex;align-items:center;justify-content:center;
+}
+.nav-logo-inner img{width:100%;height:100%;object-fit:cover}
+.nav-logo-inner .fb{font-size:18px;display:none}
+.nav-title{
+  font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:700;
+  letter-spacing:.05em;
+  background:linear-gradient(90deg,var(--v3),var(--b2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.nav-right{display:flex;align-items:center;gap:10px}
+.nav-wa{
+  display:flex;align-items:center;gap:6px;
+  padding:7px 14px;border-radius:8px;
+  background:rgba(37,211,102,.1);border:1px solid rgba(37,211,102,.25);
+  color:var(--wa);font-size:.76rem;font-weight:500;
+  text-decoration:none;transition:.25s;white-space:nowrap;
+}
+.nav-wa:hover{background:rgba(37,211,102,.2);transform:translateY(-1px)}
+.nav-wa svg{flex-shrink:0}
+
+/* ═══════════════════════════════════════════
+   PAGE WRAP
+═══════════════════════════════════════════ */
+.page{position:relative;z-index:2;padding-top:58px}
+.wrap{max-width:860px;margin:0 auto;padding:0 16px 100px}
+
+/* ═══════════════════════════════════════════
+   HERO
+═══════════════════════════════════════════ */
+.hero{
+  text-align:center;
+  padding:60px 20px 50px;
+  position:relative;
+}
+/* Floating rings behind logo */
+.hero-rings{
+  position:absolute;top:40px;left:50%;transform:translateX(-50%);
+  width:220px;height:220px;pointer-events:none;
+}
+.ring{
+  position:absolute;border-radius:50%;border:1px solid;
+  animation:expand 4s ease-out infinite;
+  top:50%;left:50%;transform:translate(-50%,-50%);
+}
+.ring:nth-child(1){width:120px;height:120px;border-color:rgba(111,45,250,.35);animation-delay:0s}
+.ring:nth-child(2){width:170px;height:170px;border-color:rgba(56,189,248,.2);animation-delay:1.3s}
+.ring:nth-child(3){width:220px;height:220px;border-color:rgba(232,121,249,.12);animation-delay:2.6s}
+@keyframes expand{0%{opacity:.8;transform:translate(-50%,-50%) scale(.6)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.1)}}
+
+.hero-logo{
+  width:106px;height:106px;border-radius:50%;
+  margin:0 auto 26px;position:relative;z-index:1;
+}
+.hero-logo-spin{
+  position:absolute;inset:-3px;border-radius:50%;
+  background:conic-gradient(from 0deg,var(--v1),var(--b1),var(--cy),var(--pi),var(--v1));
+  animation:spin 4s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.hero-logo-face{
+  position:absolute;inset:3px;border-radius:50%;
+  overflow:hidden;background:var(--ink2);
+  display:flex;align-items:center;justify-content:center;
+}
+.hero-logo-face img{width:100%;height:100%;object-fit:cover}
+.hero-logo-face .fb{font-size:42px;display:none}
+
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:5px 16px;border-radius:20px;margin-bottom:18px;
+  background:rgba(111,45,250,.12);border:1px solid var(--bdr);
+  font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--v3);
+}
+.hero-eyebrow span{width:6px;height:6px;border-radius:50%;background:var(--v2);animation:pulse 2s ease infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+
+.hero h1{
+  font-family:'Syne',sans-serif;
+  font-size:clamp(2.4rem,9vw,3.8rem);
+  font-weight:800;line-height:1.05;
+  letter-spacing:-.02em;
+  margin-bottom:14px;
+}
+.hero h1 .line1{
+  display:block;
+  background:linear-gradient(135deg,#fff 0%,var(--v3) 50%,var(--b2) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.hero h1 .line2{
+  display:block;
+  background:linear-gradient(135deg,var(--b2) 0%,var(--cy) 50%,var(--pi) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  font-size:75%;
+}
+.hero-desc{
+  font-size:.95rem;color:var(--txt2);
+  max-width:420px;margin:0 auto 28px;line-height:1.75;
+}
+
+/* Typewriter */
+.typewriter{color:var(--v3);font-weight:500;border-right:2px solid var(--v3);white-space:nowrap;overflow:hidden;display:inline-block}
+
+.hero-stats{
+  display:flex;gap:0;justify-content:center;
+  margin:28px 0 36px;
+  background:var(--surf);border:1px solid var(--bdr);
+  border-radius:14px;overflow:hidden;
+  max-width:380px;margin-left:auto;margin-right:auto;
+}
+.stat-item{flex:1;padding:14px 10px;text-align:center;position:relative}
+.stat-item+.stat-item::before{content:'';position:absolute;left:0;top:15%;bottom:15%;width:1px;background:var(--bdr)}
+.stat-num{font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:700;background:var(--gv);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.stat-lbl{font-size:.68rem;color:var(--txt3);letter-spacing:.08em;margin-top:2px}
+
+.hero-cta-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.btn-primary{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:13px 28px;border-radius:12px;
+  background:var(--gv);color:#fff;
+  font-family:'Syne',sans-serif;font-size:.9rem;font-weight:600;
+  letter-spacing:.04em;border:none;cursor:pointer;
+  box-shadow:0 4px 30px rgba(111,45,250,.4);
+  transition:all .28s;position:relative;overflow:hidden;
+}
+.btn-primary::after{content:'';position:absolute;inset:0;background:rgba(255,255,255,0);transition:.25s}
+.btn-primary:hover::after{background:rgba(255,255,255,.08)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 40px rgba(111,45,250,.55)}
+.btn-secondary{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:12px 24px;border-radius:12px;
+  background:var(--surf2);border:1px solid var(--bdr);
+  color:var(--txt2);font-size:.9rem;cursor:pointer;transition:.28s;
+}
+.btn-secondary:hover{border-color:var(--v1);color:var(--txt);transform:translateY(-2px)}
+
+.scroll-hint{
+  margin-top:36px;display:flex;flex-direction:column;align-items:center;gap:6px;
+  color:var(--txt3);font-size:.72rem;letter-spacing:.1em;
+}
+.scroll-line{width:1px;height:40px;background:linear-gradient(to bottom,var(--v1),transparent);animation:scrollAnim 2s ease-in-out infinite}
+@keyframes scrollAnim{0%{transform:scaleY(0);transform-origin:top}50%{transform:scaleY(1);transform-origin:top}51%{transform:scaleY(1);transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
+
+/* ═══════════════════════════════════════════
+   SECTION SHARED
+═══════════════════════════════════════════ */
+.section{margin-top:24px}
+.glass{
+  background:rgba(14,14,36,.75);
+  border:1px solid var(--bdr);
+  border-radius:var(--r);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  box-shadow:0 4px 40px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.05);
+}
+.sec-tag{
+  display:inline-flex;align-items:center;gap:7px;
+  font-size:.65rem;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--b2);margin-bottom:6px;
+}
+.sec-tag::before{content:'';width:18px;height:1px;background:var(--b2)}
+.sec-title{
+  font-family:'Syne',sans-serif;font-size:1.55rem;font-weight:700;
+  color:var(--txt);margin-bottom:20px;
+}
+.sec-title span{background:var(--gv);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+/* ═══════════════════════════════════════════
+   SERVICE CARDS
+═══════════════════════════════════════════ */
+.svc-wrap{padding:28px 20px}
+.svc-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.svc-card{
+  position:relative;overflow:hidden;
+  padding:26px 18px 22px;border-radius:var(--rs);
+  background:rgba(10,10,28,.8);
+  border:1px solid rgba(111,45,250,.15);
+  cursor:pointer;text-align:center;
+  transition:all .32s cubic-bezier(.34,1.4,.64,1);
+  -webkit-tap-highlight-color:transparent;
+}
+/* shimmer line top */
+.svc-card::before{
+  content:'';position:absolute;top:0;left:10%;right:10%;height:1px;
+  background:linear-gradient(90deg,transparent,var(--v1),transparent);
+  opacity:0;transition:.3s;
+}
+.svc-card:hover::before,.svc-card:active::before{opacity:1}
+/* glow bg */
+.svc-card::after{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(111,45,250,.14),transparent 65%);
+  opacity:0;transition:.35s;pointer-events:none;
+}
+.svc-card:hover::after,.svc-card:active::after{opacity:1}
+.svc-card:hover,.svc-card:active{
+  transform:translateY(-5px) scale(1.01);
+  border-color:rgba(111,45,250,.5);
+  box-shadow:0 12px 50px rgba(111,45,250,.2),0 0 0 1px rgba(111,45,250,.12);
+}
+/* icon box */
+.svc-icon{
+  width:62px;height:62px;border-radius:16px;
+  margin:0 auto 14px;display:flex;align-items:center;justify-content:center;
+  font-size:1.8rem;position:relative;z-index:1;
+  transition:transform .32s cubic-bezier(.34,1.56,.64,1);
+}
+.svc-card:hover .svc-icon{transform:scale(1.12) translateY(-3px)}
+.ic1{background:linear-gradient(135deg,rgba(111,45,250,.2),rgba(56,189,248,.1));border:1px solid rgba(111,45,250,.3)}
+.ic2{background:linear-gradient(135deg,rgba(29,155,240,.2),rgba(6,182,212,.1));border:1px solid rgba(29,155,240,.3)}
+.ic3{background:linear-gradient(135deg,rgba(232,121,249,.18),rgba(111,45,250,.1));border:1px solid rgba(232,121,249,.3)}
+.ic4{background:linear-gradient(135deg,rgba(6,182,212,.18),rgba(56,189,248,.1));border:1px solid rgba(6,182,212,.3)}
+.ic5{background:linear-gradient(135deg,rgba(111,45,250,.15),rgba(232,121,249,.15));border:1px solid rgba(232,121,249,.25)}
+
+.svc-name{
+  font-family:'Syne',sans-serif;font-size:.98rem;font-weight:700;
+  color:var(--txt);margin-bottom:6px;position:relative;z-index:1;
+}
+.svc-desc{font-size:.73rem;color:var(--txt2);line-height:1.65;position:relative;z-index:1}
+.svc-arrow{
+  display:inline-flex;align-items:center;gap:4px;
+  margin-top:12px;padding:6px 14px;border-radius:8px;
+  font-size:.72rem;font-weight:500;
+  background:rgba(111,45,250,.12);border:1px solid rgba(111,45,250,.22);
+  color:var(--v3);transition:.25s;position:relative;z-index:1;
+}
+.svc-card:hover .svc-arrow{background:rgba(111,45,250,.25);border-color:var(--v1);color:#fff;gap:8px}
+.svc-wide{grid-column:1/-1}
+
+/* ═══════════════════════════════════════════
+   HOW IT WORKS
+═══════════════════════════════════════════ */
+.how-wrap{padding:28px 20px}
+.steps{display:flex;flex-direction:column;gap:0;margin-top:6px}
+.step{display:flex;gap:18px;align-items:flex-start;position:relative;padding-bottom:28px}
+.step:last-child{padding-bottom:0}
+.step-left{display:flex;flex-direction:column;align-items:center;flex-shrink:0}
+.step-num{
+  width:42px;height:42px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;
+  position:relative;flex-shrink:0;
+}
+.s1 .step-num{background:linear-gradient(135deg,var(--v1),var(--v2));box-shadow:0 0 20px rgba(111,45,250,.4)}
+.s2 .step-num{background:linear-gradient(135deg,var(--b1),var(--cy));box-shadow:0 0 20px rgba(29,155,240,.4)}
+.s3 .step-num{background:linear-gradient(135deg,var(--pi),var(--v2));box-shadow:0 0 20px rgba(232,121,249,.4)}
+.s4 .step-num{background:linear-gradient(135deg,var(--cy),var(--b2));box-shadow:0 0 20px rgba(6,182,212,.4)}
+.step-line{width:2px;flex:1;margin-top:6px;background:linear-gradient(to bottom,var(--bdr),transparent);min-height:20px}
+.step:last-child .step-line{display:none}
+.step-body{padding-top:8px}
+.step-title{font-family:'Syne',sans-serif;font-size:.95rem;font-weight:700;color:var(--txt);margin-bottom:4px}
+.step-desc{font-size:.78rem;color:var(--txt2);line-height:1.65}
+
+/* ═══════════════════════════════════════════
+   WHY US  — horizontal scroll chips on mobile
+═══════════════════════════════════════════ */
+.why-wrap{padding:28px 20px}
+.why-scroll{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:4px}
+.why-chip{
+  padding:16px 12px;border-radius:14px;text-align:center;
+  background:var(--surf);border:1px solid var(--bdr);
+  transition:.25s;
+}
+.why-chip:hover{border-color:rgba(111,45,250,.4);background:rgba(111,45,250,.08);transform:translateY(-2px)}
+.wc-icon{font-size:1.6rem;margin-bottom:8px}
+.wc-title{font-size:.8rem;font-weight:600;color:var(--txt);margin-bottom:2px}
+.wc-sub{font-size:.68rem;color:var(--txt2)}
+
+/* ═══════════════════════════════════════════
+   REVIEWS
+═══════════════════════════════════════════ */
+.rev-wrap{padding:28px 20px}
+.rev-scroll-track{overflow-x:auto;margin:0 -20px;padding:0 20px 12px;scrollbar-width:none}
+.rev-scroll-track::-webkit-scrollbar{display:none}
+.rev-scroll{display:flex;gap:12px;width:max-content;padding-bottom:4px}
+.rev-card{
+  width:230px;flex-shrink:0;padding:18px;border-radius:14px;
+  background:var(--surf);border:1px solid var(--bdr);
+  position:relative;overflow:hidden;transition:.25s;
+}
+.rev-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--gv);opacity:.4}
+.rev-card:hover{border-color:rgba(111,45,250,.35);transform:translateY(-2px)}
+.rev-stars{color:#fbbf24;font-size:.95rem;letter-spacing:2px;margin-bottom:8px}
+.rev-text{font-size:.78rem;color:var(--txt2);line-height:1.7;margin-bottom:10px}
+.rev-author{font-size:.7rem;color:var(--txt3);letter-spacing:.06em;display:flex;align-items:center;gap:6px}
+.rev-author::before{content:'';width:16px;height:1px;background:var(--v1)}
+.no-rev{
+  text-align:center;padding:28px;color:var(--txt3);font-size:.83rem;
+  border:1px dashed var(--bdr);border-radius:12px;width:100%;
+}
+.rev-form{
+  margin-top:20px;padding:20px;
+  background:var(--surf);border:1px solid var(--bdr);border-radius:14px;
+}
+.rev-form-title{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;color:var(--txt);margin-bottom:16px}
+.star-row{display:flex;gap:4px;margin-bottom:12px}
+.s-btn{font-size:1.6rem;background:none;border:none;cursor:pointer;opacity:.25;transition:.2s;color:#fbbf24;padding:2px;line-height:1}
+.s-btn.on,.s-btn:hover{opacity:1;transform:scale(1.15)}
+
+/* ═══════════════════════════════════════════
+   FORM ELEMENTS
+═══════════════════════════════════════════ */
+.f-row{margin-bottom:14px}
+.f-row label{
+  display:block;font-size:.65rem;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--txt2);margin-bottom:7px;
+}
+.f2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+input,textarea,select{
+  width:100%;padding:12px 15px;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(111,45,250,.18);
+  border-radius:var(--rs);color:var(--txt);
+  font-size:.88rem;outline:none;
+  transition:border-color .25s,box-shadow .25s,background .25s;
+  -webkit-appearance:none;
+}
+input::placeholder,textarea::placeholder{color:var(--txt3)}
+input:focus,textarea:focus,select:focus{
+  border-color:var(--v1);
+  background:rgba(111,45,250,.06);
+  box-shadow:0 0 0 3px rgba(111,45,250,.12);
+}
+select option{background:#0f0f28;color:var(--txt)}
+textarea{resize:vertical;min-height:74px}
+.submit-btn{
+  width:100%;padding:14px;border-radius:12px;border:none;cursor:pointer;
+  background:var(--gv);color:#fff;
+  font-family:'Syne',sans-serif;font-size:.95rem;font-weight:700;
+  letter-spacing:.04em;
+  box-shadow:0 4px 28px rgba(111,45,250,.38);
+  transition:all .28s;position:relative;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.submit-btn::before{content:'';position:absolute;inset:0;background:rgba(255,255,255,0);transition:.25s}
+.submit-btn:hover::before{background:rgba(255,255,255,.08)}
+.submit-btn:hover{transform:translateY(-2px);box-shadow:0 8px 40px rgba(111,45,250,.55)}
+
+/* ═══════════════════════════════════════════
+   ORDER MODAL — bottom sheet
+═══════════════════════════════════════════ */
+.modal-bg{
+  position:fixed;inset:0;z-index:600;
+  background:rgba(5,5,18,.9);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  display:flex;align-items:flex-end;justify-content:center;
+  opacity:0;pointer-events:none;
+  transition:opacity .3s;
+}
+.modal-bg.open{opacity:1;pointer-events:all}
+.modal{
+  width:100%;max-width:580px;
+  max-height:93vh;overflow-y:auto;
+  background:#0c0c24;
+  border:1px solid var(--bdr);
+  border-radius:24px 24px 0 0;
+  padding:12px 20px 48px;
+  transform:translateY(100%);
+  transition:transform .4s cubic-bezier(.32,1.2,.64,1);
+  position:relative;
+  scrollbar-width:none;
+}
+.modal::-webkit-scrollbar{display:none}
+.modal-bg.open .modal{transform:translateY(0)}
+.modal-drag{width:44px;height:4px;border-radius:4px;background:rgba(255,255,255,.12);margin:0 auto 18px;cursor:pointer}
+.modal-service-badge{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:5px 14px;border-radius:20px;margin-bottom:10px;
+  background:rgba(111,45,250,.12);border:1px solid var(--bdr);
+  font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--v3);
+}
+.modal-title{font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:700;margin-bottom:4px}
+.modal-sub{font-size:.8rem;color:var(--txt2);margin-bottom:22px;line-height:1.6}
+.modal-close{
+  position:absolute;top:16px;right:16px;
+  width:34px;height:34px;border-radius:50%;
+  background:rgba(255,255,255,.07);border:1px solid var(--bdr);
+  color:var(--txt2);font-size:1rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:.2s;
+}
+.modal-close:hover{background:rgba(111,45,250,.2);color:var(--txt);border-color:var(--v1)}
+
+/* Print extras */
+.print-extras{display:none;margin-top:2px}
+.type-toggle{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.type-opt{
+  padding:12px;border-radius:10px;text-align:center;cursor:pointer;
+  background:rgba(255,255,255,.03);border:1px solid rgba(111,45,250,.18);
+  color:var(--txt2);font-size:.84rem;transition:.25s;
+}
+.type-opt.sel{background:rgba(111,45,250,.14);border-color:var(--v1);color:var(--txt)}
+.type-opt .rate{display:block;font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:700;color:var(--v3);margin-top:4px}
+.type-opt:hover:not(.sel){border-color:rgba(111,45,250,.4)}
+
+/* ═══════════════════════════════════════════
+   SUCCESS PAGE
+═══════════════════════════════════════════ */
+#successPage{
+  display:none;
+  position:fixed;inset:0;z-index:700;
+  background:var(--ink);
+  overflow-y:auto;
+  padding-top:58px;
+}
+.succ-wrap{max-width:540px;margin:0 auto;padding:40px 18px 80px;text-align:center}
+
+/* confetti canvas */
+#confettiCanvas{position:fixed;inset:0;z-index:710;pointer-events:none}
+
+.succ-icon-wrap{
+  width:88px;height:88px;border-radius:50%;margin:0 auto 20px;
+  background:linear-gradient(135deg,rgba(111,45,250,.2),rgba(29,155,240,.2));
+  border:2px solid rgba(111,45,250,.4);
+  display:flex;align-items:center;justify-content:center;
+  animation:popIn .6s cubic-bezier(.34,1.56,.64,1) both;
+  font-size:2.5rem;
+}
+@keyframes popIn{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+.succ-title{font-family:'Syne',sans-serif;font-size:1.9rem;font-weight:800;margin-bottom:6px;background:var(--gv);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.succ-sub{font-size:.85rem;color:var(--txt2);margin-bottom:26px;line-height:1.7}
+
+.order-id-card{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 18px;margin:0 0 20px;
+  background:rgba(29,155,240,.07);border:1px solid rgba(29,155,240,.22);border-radius:12px;
+}
+.oid-label{font-size:.65rem;letter-spacing:.15em;text-transform:uppercase;color:var(--txt3)}
+.oid-val{font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:700;color:var(--b2);letter-spacing:.12em}
+.oid-copy{padding:6px 12px;border-radius:8px;background:rgba(29,155,240,.12);border:1px solid rgba(29,155,240,.25);color:var(--b2);font-size:.72rem;cursor:pointer;transition:.25s;flex-shrink:0}
+.oid-copy:hover{background:rgba(29,155,240,.25)}
+
+.pay-card{
+  background:rgba(14,14,36,.9);border:1px solid var(--bdr);
+  border-radius:var(--r);padding:22px 18px;margin-bottom:16px;text-align:left;
+}
+.pay-card-title{font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:700;text-align:center;margin-bottom:18px;color:var(--txt)}
+.qr-area{display:flex;flex-direction:column;align-items:center;gap:14px}
+.qr-box{
+  width:164px;height:164px;border-radius:14px;overflow:hidden;
+  border:2px solid var(--v1);background:#fff;
+  box-shadow:0 0 40px rgba(111,45,250,.25);
+}
+.qr-box img{width:100%;height:100%;object-fit:contain}
+.upi-row{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  width:100%;max-width:280px;
+  padding:10px 14px;border-radius:10px;
+  background:rgba(111,45,250,.08);border:1px solid var(--bdr);
+  cursor:pointer;transition:.25s;
+}
+.upi-row:hover{border-color:var(--v1)}
+.upi-id{font-size:.86rem;color:var(--v3);font-weight:500}
+.upi-cp{font-size:.65rem;color:var(--txt3)}
+.pay-name-line{font-size:.78rem;color:var(--txt2);text-align:center}
+.pay-warn{
+  margin-top:12px;padding:10px 14px;border-radius:10px;
+  background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.2);
+  font-size:.76rem;color:#fbbf24;text-align:center;
+}
+
+.succ-btn-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:18px 0}
+.btn-wa{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:13px 22px;border-radius:12px;
+  background:linear-gradient(135deg,#1a6e2e,var(--wa));color:#fff;
+  font-family:'Syne',sans-serif;font-size:.9rem;font-weight:600;
+  border:none;cursor:pointer;
+  box-shadow:0 4px 22px rgba(37,211,102,.22);transition:.28s;
+}
+.btn-wa:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(37,211,102,.38)}
+.btn-ghost{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:12px 20px;border-radius:12px;
+  background:var(--surf);border:1px solid var(--bdr);
+  color:var(--txt2);font-size:.88rem;cursor:pointer;transition:.28s;
+}
+.btn-ghost:hover{border-color:var(--v1);color:var(--txt);transform:translateY(-2px)}
+
+.track-card{
+  background:rgba(14,14,36,.9);border:1px solid var(--bdr);
+  border-radius:var(--r);padding:20px 18px;text-align:left;
+}
+.track-title{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;margin-bottom:12px}
+.track-row{display:flex;gap:8px;flex-wrap:wrap}
+.track-row input{flex:1;min-width:120px}
+.track-go{
+  padding:12px 18px;border-radius:10px;
+  background:rgba(111,45,250,.18);border:1px solid var(--bdr);
+  color:var(--v3);font-size:.84rem;cursor:pointer;white-space:nowrap;transition:.25s;
+}
+.track-go:hover{background:rgba(111,45,250,.3);border-color:var(--v1)}
+.stat-result{
+  margin-top:12px;padding:14px;border-radius:10px;
+  font-size:.82rem;line-height:1.8;display:none;
+}
+.stat-ok{background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.22);color:var(--txt)}
+.stat-err{background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.22);color:#f87171}
+
+/* ═══════════════════════════════════════════
+   FLOATING WA BUTTON
+═══════════════════════════════════════════ */
+.fab-wa{
+  position:fixed;bottom:24px;right:20px;z-index:400;
+  width:54px;height:54px;border-radius:50%;
+  background:linear-gradient(135deg,#1a6e2e,var(--wa));
+  color:#fff;font-size:1.5rem;border:none;cursor:pointer;
+  box-shadow:0 4px 24px rgba(37,211,102,.4);
+  display:flex;align-items:center;justify-content:center;
+  animation:fabPulse 3s ease-in-out infinite;
+  transition:transform .25s;text-decoration:none;
+}
+.fab-wa:hover{transform:scale(1.1)}
+@keyframes fabPulse{
+  0%,100%{box-shadow:0 4px 24px rgba(37,211,102,.4)}
+  50%{box-shadow:0 4px 40px rgba(37,211,102,.7),0 0 0 8px rgba(37,211,102,.1)}
+}
+.fab-tooltip{
+  position:fixed;bottom:34px;right:84px;z-index:400;
+  padding:7px 14px;border-radius:8px;
+  background:rgba(10,10,26,.95);border:1px solid var(--bdr);
+  color:var(--txt);font-size:.76rem;white-space:nowrap;
+  pointer-events:none;opacity:0;transition:.25s;
+  box-shadow:0 4px 20px rgba(0,0,0,.4);
+}
+.fab-wa:hover ~ .fab-tooltip,.fab-tooltip:hover{opacity:1}
+
+/* ═══════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════ */
+.toast{
+  position:fixed;bottom:90px;left:50%;
+  transform:translateX(-50%) translateY(20px);
+  padding:11px 22px;border-radius:10px;
+  background:rgba(12,12,36,.97);border:1px solid var(--v1);
+  color:var(--v3);font-size:.8rem;
+  box-shadow:0 8px 30px rgba(0,0,0,.5);
+  backdrop-filter:blur(12px);z-index:9999;
+  pointer-events:none;opacity:0;white-space:nowrap;
+  transition:all .38s cubic-bezier(.34,1.56,.64,1);
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ═══════════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════════ */
+footer{
+  position:relative;z-index:2;
+  text-align:center;padding:28px 20px;
+  border-top:1px solid var(--bdr);
+  margin-top:16px;
+}
+.footer-brand{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700;background:var(--gv);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:6px}
+.footer-sub{font-size:.72rem;color:var(--txt3);letter-spacing:.07em}
+.footer-divider{width:60px;height:1px;background:var(--gv);margin:14px auto;opacity:.4}
+.footer-copy{font-size:.68rem;color:var(--txt3);letter-spacing:.08em;text-transform:uppercase}
+
+/* ═══════════════════════════════════════════
+   ANIMATIONS — entrance
+═══════════════════════════════════════════ */
+@keyframes fadeUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+.anim{opacity:0;transform:translateY(28px);transition:opacity .7s ease,transform .7s ease}
+.anim.in{opacity:1;transform:translateY(0)}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════ */
+@media(max-width:520px){
+  .hero h1{font-size:2.2rem}
+  .hero-stats{max-width:100%}
+  .svc-grid{grid-template-columns:1fr 1fr;gap:10px}
+  .svc-icon{width:52px;height:52px;font-size:1.5rem}
+  .why-scroll{grid-template-columns:1fr 1fr}
+  .f2{grid-template-columns:1fr}
+  .succ-btn-row{flex-direction:column;align-items:center}
+  .succ-btn-row .btn-wa,.succ-btn-row .btn-ghost{width:100%;justify-content:center}
+  .modal{padding:12px 14px 48px}
+}
+@media(max-width:360px){
+  .svc-grid{grid-template-columns:1fr}
+  .svc-wide{grid-column:unset}
+}
+</style>
+</head>
+<body>
+
+<!-- BG LAYERS -->
+<canvas id="bgCanvas"></canvas>
+<div class="mesh"></div>
+<div class="noise"></div>
+<div class="gridlines"></div>
+
+<!-- NAV -->
+<nav id="navbar">
+  <a class="nav-brand" href="#">
+    <div class="nav-logo-ring">
+      <div class="nav-logo-inner">
+        <img src="logo-dp.png" alt="Deva Scripts"
+          onerror="this.style.display='none';this.parentElement.querySelector('.fb').style.display='block'">
+        <span class="fb">📜</span>
+      </div>
+    </div>
+    <span class="nav-title">Deva Scripts</span>
+  </a>
+  <div class="nav-right">
+    <a class="nav-wa" href="https://wa.me/919557700498" target="_blank">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      Chat Now
+    </a>
+  </div>
+</nav>
+
+<!-- MAIN PAGE -->
+<div class="page" id="mainPage">
+<div class="wrap">
+
+  <!-- HERO -->
+  <section class="hero anim">
+    <div class="hero-rings">
+      <div class="ring"></div><div class="ring"></div><div class="ring"></div>
+    </div>
+    <div class="hero-logo">
+      <div class="hero-logo-spin"></div>
+      <div class="hero-logo-face">
+        <img src="logo-dp.png" alt="Deva Scripts"
+          onerror="this.style.display='none';this.parentElement.querySelector('.fb').style.display='block'">
+        <span class="fb">📜</span>
+      </div>
+    </div>
+    <div class="hero-eyebrow"><span></span>SAHARANPUR's #1 Writing Studio</div>
+    <h1>
+      <span class="line1">Deva Scripts</span>
+      <span class="line2">Write it Right. Every Time.</span>
+    </h1>
+    <p class="hero-desc">
+      From handwritten notes to college projects &amp; document printing —
+      we deliver <span class="typewriter" id="tw"></span>
+    </p>
+
+    <div class="hero-stats">
+      <div class="stat-item">
+        <div class="stat-num" id="cnt1">0</div>
+        <div class="stat-lbl">Orders Done</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num" id="cnt2">0</div>
+        <div class="stat-lbl">Happy Students</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num" id="cnt3">0</div>
+        <div class="stat-lbl">Services</div>
+      </div>
+    </div>
+
+    <div class="hero-cta-row">
+      <button class="btn-primary" onclick="document.querySelector('.svc-wrap').scrollIntoView({behavior:'smooth'})">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+        Browse Services
+      </button>
+      <a class="btn-secondary" href="https://wa.me/919557700498" target="_blank">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Ask on WhatsApp
+      </a>
+    </div>
+    <div class="scroll-hint">
+      <span>SCROLL</span>
+      <div class="scroll-line"></div>
+    </div>
+  </section>
+
+  <!-- SERVICES -->
+  <section class="glass section anim">
+    <div class="svc-wrap">
+      <div class="sec-tag">What We Offer</div>
+      <div class="sec-title">Choose Your <span>Service</span></div>
+      <div class="svc-grid">
+
+        <div class="svc-card" onclick="openOrder('Notes Writing','Handwritten notes for any class or subject — neat, structured, exam-ready.')">
+          <div class="svc-icon ic1">📘</div>
+          <div class="svc-name">Notes Writing</div>
+          <div class="svc-desc">Neat, clear handwritten notes for any subject or class — structured &amp; exam-ready</div>
+          <div class="svc-arrow">Order Now <span>→</span></div>
+        </div>
+
+        <div class="svc-card" onclick="openOrder('School Project','Beautifully formatted school project files with decorated cover pages &amp; diagrams.')">
+          <div class="svc-icon ic2">📊</div>
+          <div class="svc-name">School Projects</div>
+          <div class="svc-desc">Decorated, formatted &amp; high-quality school project files that stand out</div>
+          <div class="svc-arrow">Order Now <span>→</span></div>
+        </div>
+
+        <div class="svc-card" onclick="openOrder('College Project','Professional college project files with index, content pages &amp; proper formatting.')">
+          <div class="svc-icon ic3">🎓</div>
+          <div class="svc-name">College Projects</div>
+          <div class="svc-desc">Professional-grade college files with index, formatting &amp; presentation quality</div>
+          <div class="svc-arrow">Order Now <span>→</span></div>
+        </div>
+
+        <div class="svc-card" onclick="openOrder('Printing','Single side or double side document printing on A4, A3 or any paper size.')">
+          <div class="svc-icon ic4">🖨️</div>
+          <div class="svc-name">Printing</div>
+          <div class="svc-desc">Single &amp; double side document printing — any size, fast &amp; crisp quality</div>
+          <div class="svc-arrow">Order Now <span>→</span></div>
+        </div>
+
+        <div class="svc-card svc-wide" onclick="openOrder('Any Writing Work','Tell us what you need — assignments, applications, forms, copies or anything else.')">
+          <div class="svc-icon ic5" style="width:56px;height:56px;font-size:1.7rem">✍️</div>
+          <div class="svc-name">Any Writing Work</div>
+          <div class="svc-desc">Assignments · Applications · Forms · Copies · Custom writing — whatever you need, we deliver</div>
+          <div class="svc-arrow">Order Now <span>→</span></div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="glass section anim">
+    <div class="how-wrap">
+      <div class="sec-tag">Simple Process</div>
+      <div class="sec-title">How It <span>Works</span></div>
+      <div class="steps">
+        <div class="step s1">
+          <div class="step-left">
+            <div class="step-num">1</div>
+            <div class="step-line"></div>
+          </div>
+          <div class="step-body">
+            <div class="step-title">Pick Your Service</div>
+            <div class="step-desc">Tap the service card that matches what you need — notes, projects, printing or any writing work.</div>
+          </div>
+        </div>
+        <div class="step s2">
+          <div class="step-left">
+            <div class="step-num">2</div>
+            <div class="step-line"></div>
+          </div>
+          <div class="step-body">
+            <div class="step-title">Fill Your Details</div>
+            <div class="step-desc">Enter your name, phone number, subject, class, deadline &amp; any special instructions.</div>
+          </div>
+        </div>
+        <div class="step s3">
+          <div class="step-left">
+            <div class="step-num">3</div>
+            <div class="step-line"></div>
+          </div>
+          <div class="step-body">
+            <div class="step-title">Get a Price &amp; Confirm</div>
+            <div class="step-desc">We'll quote the price on WhatsApp. Pay via UPI after confirming — no hidden charges.</div>
+          </div>
+        </div>
+        <div class="step s4">
+          <div class="step-left">
+            <div class="step-num">4</div>
+            <div class="step-line"></div>
+          </div>
+          <div class="step-body">
+            <div class="step-title">Receive Your Work</div>
+            <div class="step-desc">We deliver neat, high-quality work on time — always ready to impress.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHY US -->
+  <section class="glass section anim">
+    <div class="why-wrap">
+      <div class="sec-tag">Our Promise</div>
+      <div class="sec-title">Why <span>Choose Us?</span></div>
+      <div class="why-scroll">
+        <div class="why-chip"><div class="wc-icon">⚡</div><div class="wc-title">Fast Delivery</div><div class="wc-sub">Quick turnaround always</div></div>
+        <div class="why-chip"><div class="wc-icon">✍️</div><div class="wc-title">Neat Writing</div><div class="wc-sub">Clear &amp; readable work</div></div>
+        <div class="why-chip"><div class="wc-icon">🏆</div><div class="wc-title">High Marks</div><div class="wc-sub">Quality that gets noticed</div></div>
+        <div class="why-chip"><div class="wc-icon">💬</div><div class="wc-title">WhatsApp Support</div><div class="wc-sub">Always available to help</div></div>
+        <div class="why-chip"><div class="wc-icon">🔒</div><div class="wc-title">Safe Payment</div><div class="wc-sub">Pay only via trusted UPI</div></div>
+        <div class="why-chip"><div class="wc-icon">📦</div><div class="wc-title">Custom Orders</div><div class="wc-sub">Any format, any subject</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- REVIEWS -->
+  <section class="glass section anim">
+    <div class="rev-wrap">
+      <div class="sec-tag">Testimonials</div>
+      <div class="sec-title">What Students <span>Say</span></div>
+      <div class="rev-scroll-track">
+        <div class="rev-scroll" id="revScroll">
+          <div class="no-rev" id="noRev">No reviews yet — be the first! 🌟</div>
+        </div>
+      </div>
+      <div class="rev-form">
+        <div class="rev-form-title">⭐ Share Your Experience</div>
+        <div class="f-row">
+          <label>Your Name</label>
+          <input id="rName" placeholder="Enter your name" maxlength="40">
+        </div>
+        <div class="f-row">
+          <label>Rating</label>
+          <div class="star-row">
+            <button class="s-btn" onclick="setStar(1)">★</button>
+            <button class="s-btn" onclick="setStar(2)">★</button>
+            <button class="s-btn" onclick="setStar(3)">★</button>
+            <button class="s-btn" onclick="setStar(4)">★</button>
+            <button class="s-btn" onclick="setStar(5)">★</button>
+          </div>
+        </div>
+        <div class="f-row">
+          <label>Your Review</label>
+          <textarea id="rText" placeholder="Tell others about your experience..." rows="3" maxlength="220"></textarea>
+        </div>
+        <button class="submit-btn" onclick="submitReview()">Submit Review ✦</button>
+      </div>
+    </div>
+  </section>
+
+  <footer class="anim">
+    <div class="footer-brand">Deva Scripts</div>
+    <div class="footer-sub">Premium Writing &amp; Printing · Meerut, UP</div>
+    <div class="footer-divider"></div>
+    <div class="footer-copy">© 2026 Deva Scripts · All rights reserved</div>
+  </footer>
+
+</div>
+</div><!-- /mainPage -->
+
+<!-- ═══════ ORDER MODAL ═══════ -->
+<div class="modal-bg" id="modalBg" onclick="bgClick(event)">
+  <div class="modal" id="modal">
+    <div class="modal-drag" onclick="closeModal()"></div>
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-service-badge" id="modalBadge">Service</div>
+    <div class="modal-title" id="modalTitle">Place Order</div>
+    <div class="modal-sub" id="modalSub">Fill your details and we'll get back to you shortly</div>
+
+    <div class="f-row">
+      <label>Full Name *</label>
+      <input id="oName" placeholder="Your full name">
+    </div>
+    <div class="f2">
+      <div class="f-row" style="margin-bottom:0">
+        <label>Phone Number *</label>
+        <input id="oPhone" placeholder="10-digit mobile" type="tel">
+      </div>
+      <div class="f-row" style="margin-bottom:0">
+        <label>Class / Course</label>
+        <input id="oClass" placeholder="e.g. Class 10 / B.Com">
+      </div>
+    </div>
+    <div class="f-row" style="margin-top:14px">
+      <label>Subject / Topic</label>
+      <input id="oSubj" placeholder="e.g. Science Chapter 3 / History Project">
+    </div>
+
+    <!-- Printing extras -->
+    <div class="print-extras" id="printExtras">
+      <div class="f-row">
+        <label>Print Type</label>
+        <div class="type-toggle">
+          <div class="type-opt sel" id="tSingle" onclick="selPrint('single')">
+            Single Side<span class="rate">₹3/pg</span>
+          </div>
+          <div class="type-opt" id="tDouble" onclick="selPrint('double')">
+            Double Side<span class="rate">₹6/pg</span>
+          </div>
+        </div>
+      </div>
+      <div class="f2">
+        <div class="f-row" style="margin-bottom:0">
+          <label>No. of Pages</label>
+          <input id="oPages" type="number" value="1" min="1">
+        </div>
+        <div class="f-row" style="margin-bottom:0">
+          <label>Paper Size</label>
+          <select id="oPaper"><option>A4</option><option>A3</option><option>Letter</option><option>Legal</option></select>
+        </div>
+      </div>
+      <div class="f-row" style="margin-top:14px">
+        <label>No. of Copies</label>
+        <input id="oCopies" type="number" value="1" min="1">
+      </div>
+    </div>
+
+    <div class="f-row" style="margin-top:14px">
+      <label>Delivery Address</label>
+      <textarea id="oAddr" placeholder="Your address (for home delivery)" rows="2"></textarea>
+    </div>
+    <div class="f-row">
+      <label>Special Instructions / Deadline</label>
+      <textarea id="oNotes" placeholder="Deadline, specific requirements, format details..." rows="2"></textarea>
+    </div>
+
+    <button class="submit-btn" onclick="submitOrder()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      Submit Order
+    </button>
+  </div>
+</div>
+
+<!-- ═══════ SUCCESS PAGE ═══════ -->
+<canvas id="confettiCanvas" style="display:none"></canvas>
+<div id="successPage">
+  <div class="succ-wrap">
+    <div class="succ-icon-wrap">🎉</div>
+    <div class="succ-title">Order Placed!</div>
+    <div class="succ-sub">Your order is confirmed. Complete payment below and send us the screenshot on WhatsApp to start processing.</div>
+
+    <div class="order-id-card">
+      <div>
+        <div class="oid-label">Tracking ID</div>
+        <div class="oid-val" id="orderId">—</div>
+      </div>
+      <button class="oid-copy" onclick="copyOID()">📋 Copy</button>
+    </div>
+
+    <div class="pay-card">
+      <div class="pay-card-title">💳 Pay via UPI to Confirm Order</div>
+      <div class="qr-area">
+        <div class="qr-box">
+          <img src="UPI_QR.png" alt="UPI QR" onerror="this.style.display='none'">
+        </div>
+        <div class="upi-row" onclick="copyUPI()">
+          <span class="upi-id">devascripts@postbank</span>
+          <span class="upi-cp">📋 tap to copy</span>
+        </div>
+        <div class="pay-name-line"><strong>DEVANSH GOYAL</strong><br>GPay · PhonePe · Paytm · Any UPI App</div>
+      </div>
+      <div class="pay-warn">⚠ Send payment screenshot on WhatsApp with your Order ID to confirm</div>
+    </div>
+
+    <div class="succ-btn-row">
+      <button class="btn-wa" onclick="sendWA()">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Send Payment Screenshot
+      </button>
+      <button class="btn-ghost" onclick="backHome()">← Place New Order</button>
+    </div>
+
+    <div class="track-card">
+      <div class="track-title">🔍 Track Your Order</div>
+      <div class="track-row">
+        <input id="trackIn" placeholder="Enter Order ID (e.g. DS123456)">
+        <button class="track-go" onclick="checkStatus()">Track</button>
+      </div>
+      <div class="stat-result" id="statResult"></div>
+    </div>
+  </div>
+</div>
+
+<!-- FAB WhatsApp -->
+<a class="fab-wa" href="https://wa.me/919557700498" target="_blank" title="Chat on WhatsApp">
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+</a>
+<div class="fab-tooltip">Chat with us on WhatsApp</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════════════════════════════
+   STATE
+═══════════════════════════════════ */
+const orders={};let lastOrd={};let starVal=0;let curSvc='';let printSide='single';
+
+/* ═══════════════════════════════════
+   PARTICLE BG
+═══════════════════════════════════ */
+(function(){
+  const c=document.getElementById('bgCanvas');
+  const ctx=c.getContext('2d');
+  let W,H,pts=[];
+  const N=55;
+  function resize(){W=c.width=window.innerWidth;H=c.height=window.innerHeight;init()}
+  function init(){
+    pts=[];
+    for(let i=0;i<N;i++){
+      pts.push({
+        x:Math.random()*W,y:Math.random()*H,
+        vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,
+        r:Math.random()*1.8+.5,
+        a:Math.random(),
+        hue:Math.random()>0.5?270:210
+      });
+    }
+  }
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    // connections
+    for(let i=0;i<pts.length;i++){
+      for(let j=i+1;j<pts.length;j++){
+        const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y;
+        const d=Math.sqrt(dx*dx+dy*dy);
+        if(d<120){
+          ctx.beginPath();
+          ctx.moveTo(pts[i].x,pts[i].y);
+          ctx.lineTo(pts[j].x,pts[j].y);
+          ctx.strokeStyle=`rgba(111,45,250,${.08*(1-d/120)})`;
+          ctx.lineWidth=.6;
+          ctx.stroke();
+        }
+      }
+    }
+    // dots
+    pts.forEach(p=>{
+      ctx.beginPath();
+      ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle=`hsla(${p.hue},85%,70%,${p.a*.5})`;
+      ctx.fill();
+      p.x+=p.vx;p.y+=p.vy;
+      p.a+=.004;if(p.a>1)p.a=0;
+      if(p.x<0||p.x>W)p.vx*=-1;
+      if(p.y<0||p.y>H)p.vy*=-1;
+    });
+    requestAnimationFrame(draw);
+  }
+  window.addEventListener('resize',resize);
+  resize();draw();
+})();
+
+/* ═══════════════════════════════════
+   TYPEWRITER
+═══════════════════════════════════ */
+(function(){
+  const words=['quality work.','neat handwriting.','on-time delivery.','high marks.','professional results.'];
+  let wi=0,ci=0,del=false;
+  const el=document.getElementById('tw');
+  function tick(){
+    const w=words[wi];
+    if(!del){
+      el.textContent=w.slice(0,++ci);
+      if(ci===w.length){del=true;setTimeout(tick,1800);return}
+    }else{
+      el.textContent=w.slice(0,--ci);
+      if(ci===0){del=false;wi=(wi+1)%words.length}
+    }
+    setTimeout(tick,del?50:80);
+  }
+  tick();
+})();
+
+/* ═══════════════════════════════════
+   COUNTER ANIMATION
+═══════════════════════════════════ */
+function animCount(id,target,suffix){
+  const el=document.getElementById(id);
+  let n=0;const step=Math.ceil(target/60);
+  const t=setInterval(()=>{
+    n=Math.min(n+step,target);
+    el.textContent=n+(suffix||'');
+    if(n>=target)clearInterval(t);
+  },25);
+}
+setTimeout(()=>{animCount('cnt1',500,'+');animCount('cnt2',300,'+');animCount('cnt3',5,'')},600);
+
+/* ═══════════════════════════════════
+   SCROLL ANIMATIONS (IntersectionObserver)
+═══════════════════════════════════ */
+const observer=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');observer.unobserve(e.target)}});
+},{threshold:.1});
+document.querySelectorAll('.anim').forEach(el=>observer.observe(el));
+
+/* ═══════════════════════════════════
+   TOAST
+═══════════════════════════════════ */
+function toast(msg,d=2800){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),d);
+}
+
+/* ═══════════════════════════════════
+   MODAL
+═══════════════════════════════════ */
+function openOrder(svc,desc){
+  curSvc=svc;
+  document.getElementById('modalBadge').textContent=svc;
+  document.getElementById('modalTitle').textContent='Order: '+svc;
+  document.getElementById('modalSub').textContent=desc;
+  document.getElementById('printExtras').style.display=svc==='Printing'?'block':'none';
+  document.getElementById('modalBg').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeModal(){
+  document.getElementById('modalBg').classList.remove('open');
+  document.body.style.overflow='';
+}
+function bgClick(e){if(e.target===document.getElementById('modalBg'))closeModal()}
+
+/* ═══════════════════════════════════
+   PRINT TYPE TOGGLE
+═══════════════════════════════════ */
+function selPrint(side){
+  printSide=side;
+  document.getElementById('tSingle').classList.toggle('sel',side==='single');
+  document.getElementById('tDouble').classList.toggle('sel',side==='double');
+}
+
+/* ═══════════════════════════════════
+   SUBMIT ORDER
+═══════════════════════════════════ */
+function submitOrder(){
+  const name=document.getElementById('oName').value.trim();
+  const phone=document.getElementById('oPhone').value.trim();
+  if(!name){toast('⚠ Please enter your full name');return}
+  if(phone.replace(/\D/g,'').length<10){toast('⚠ Please enter a valid 10-digit number');return}
+
+  const cls=document.getElementById('oClass').value.trim();
+  const subj=document.getElementById('oSubj').value.trim();
+  const addr=document.getElementById('oAddr').value.trim();
+  const notes=document.getElementById('oNotes').value.trim();
+  let pages='',copies='',paper='';
+  if(curSvc==='Printing'){
+    pages=document.getElementById('oPages').value;
+    copies=document.getElementById('oCopies').value;
+    paper=document.getElementById('oPaper').value;
+  }
+
+  const id='DS'+Math.floor(100000+Math.random()*900000);
+  lastOrd={id,name,phone,cls,subj,addr,notes,curSvc,printSide,pages,copies,paper,status:'Processing 🔄'};
+  orders[id]={...lastOrd};
+
+  // Reset fields
+  ['oName','oPhone','oClass','oSubj','oAddr','oNotes'].forEach(i=>document.getElementById(i).value='');
+  if(document.getElementById('oPages'))document.getElementById('oPages').value=1;
+  if(document.getElementById('oCopies'))document.getElementById('oCopies').value=1;
+
+  closeModal();
+  document.getElementById('successPage').style.display='block';
+  document.getElementById('orderId').textContent=id;
+  window.scrollTo({top:0,behavior:'instant'});
+  launchConfetti();
+  toast('🎉 Order submitted successfully!',3500);
+}
+
+/* ═══════════════════════════════════
+   CONFETTI
+═══════════════════════════════════ */
+function launchConfetti(){
+  const canvas=document.getElementById('confettiCanvas');
+  canvas.style.display='block';
+  canvas.width=window.innerWidth;canvas.height=window.innerHeight;
+  const ctx=canvas.getContext('2d');
+  const pieces=[];
+  const colors=['#6f2dfa','#38bdf8','#e879f9','#06b6d4','#a78bfa','#fbbf24'];
+  for(let i=0;i<120;i++){
+    pieces.push({
+      x:Math.random()*canvas.width,y:-10,
+      r:Math.random()*6+3,
+      d:Math.random()*10+5,
+      color:colors[Math.floor(Math.random()*colors.length)],
+      tilt:Math.random()*10-5,
+      tiltAngle:0,tiltSpeed:Math.random()*.1+.05,
+      opacity:1
+    });
+  }
+  let frame=0;
+  function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    pieces.forEach(p=>{
+      p.tiltAngle+=p.tiltSpeed;
+      p.y+=p.d*.8;p.tilt=Math.sin(p.tiltAngle)*12;
+      p.opacity-=.006;
+      ctx.globalAlpha=Math.max(0,p.opacity);
+      ctx.fillStyle=p.color;
+      ctx.beginPath();
+      ctx.ellipse(p.x+p.tilt,p.y,p.r*.5,p.r,0,0,Math.PI*2);
+      ctx.fill();
+    });
+    ctx.globalAlpha=1;
+    frame++;
+    if(frame<160)requestAnimationFrame(draw);
+    else{ctx.clearRect(0,0,canvas.width,canvas.height);canvas.style.display='none'}
+  }
+  draw();
+}
+
+/* ═══════════════════════════════════
+   WHATSAPP
+═══════════════════════════════════ */
+function sendWA(){
+  const o=lastOrd;
+  let printLine='';
+  if(o.curSvc==='Printing'){
+    printLine=`\n🖨 *Print Type:* ${o.printSide==='single'?'Single Side (₹3/pg)':'Double Side (₹6/pg)'}
+📄 *Pages:* ${o.pages} × ${o.copies} copies
+📐 *Paper:* ${o.paper}`;
+  }
+  const msg=`🖊️ *Deva Scripts — Order Confirmation*
+
+🆔 *Order ID:* ${o.id}
+📋 *Service:* ${o.curSvc}
+👤 *Name:* ${o.name}
+📱 *Phone:* ${o.phone}${o.cls?`\n🎓 *Class:* ${o.cls}`:''}${o.subj?`\n📚 *Subject:* ${o.subj}`:''}${printLine}${o.addr?`\n📍 *Address:* ${o.addr}`:''}${o.notes?`\n📝 *Notes:* ${o.notes}`:''}
+
+🏦 *UPI:* devascripts@postbank
+👤 *Account:* DEVANSH GOYAL
+
+_Attaching payment screenshot for confirmation._`;
+  window.open('https://wa.me/919557700498?text='+encodeURIComponent(msg),'_blank');
+}
+
+/* ═══════════════════════════════════
+   COPY HELPERS
+═══════════════════════════════════ */
+function copyOID(){
+  const id=document.getElementById('orderId').textContent;
+  navigator.clipboard&&navigator.clipboard.writeText(id).then(()=>toast('✅ Order ID copied!'));
+}
+function copyUPI(){
+  const u='devascripts@postbank';
+  if(navigator.clipboard)navigator.clipboard.writeText(u).then(()=>toast('✅ UPI ID copied!'));
+  else toast('UPI: '+u);
+}
+
+/* ═══════════════════════════════════
+   BACK HOME
+═══════════════════════════════════ */
+function backHome(){
+  document.getElementById('successPage').style.display='none';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ═══════════════════════════════════
+   TRACK ORDER
+═══════════════════════════════════ */
+function checkStatus(){
+  const id=document.getElementById('trackIn').value.trim().toUpperCase();
+  const box=document.getElementById('statResult');
+  box.style.display='block';
+  if(orders[id]){
+    const d=orders[id];
+    box.className='stat-result stat-ok';
+    box.innerHTML=`<strong>✅ Order Found</strong><br>Service: ${d.curSvc}<br>Name: ${d.name} · Phone: ${d.phone}<br>Status: <strong>${d.status}</strong>`;
+  }else{
+    box.className='stat-result stat-err';
+    box.innerHTML='❌ Order not found. Please double-check the ID.';
+  }
+}
+
+/* ═══════════════════════════════════
+   STAR RATING
+═══════════════════════════════════ */
+function setStar(n){
+  starVal=n;
+  document.querySelectorAll('.s-btn').forEach((b,i)=>b.classList.toggle('on',i<n));
+}
+
+/* ═══════════════════════════════════
+   REVIEWS
+═══════════════════════════════════ */
+function loadRevs(){
+  const revs=JSON.parse(localStorage.getItem('ds_revs_v3')||'[]');
+  const scroll=document.getElementById('revScroll');
+  const none=document.getElementById('noRev');
+  if(!revs.length){none&&(none.style.display='block');scroll.innerHTML='';scroll.appendChild(none);return}
+  none&&none.remove();
+  scroll.innerHTML=revs.map(r=>`
+    <div class="rev-card">
+      <div class="rev-stars">${'★'.repeat(r.s)}${'☆'.repeat(5-r.s)}</div>
+      <div class="rev-text">${r.t}</div>
+      <div class="rev-author">${r.n}</div>
+    </div>`).join('');
+}
+function submitReview(){
+  const n=document.getElementById('rName').value.trim();
+  const t=document.getElementById('rText').value.trim();
+  if(!n){toast('⚠ Please enter your name');return}
+  if(!starVal){toast('⚠ Please pick a star rating');return}
+  if(!t){toast('⚠ Please write your review');return}
+  const revs=JSON.parse(localStorage.getItem('ds_revs_v3')||'[]');
+  revs.unshift({n,s:starVal,t});
+  localStorage.setItem('ds_revs_v3',JSON.stringify(revs));
+  document.getElementById('rName').value='';
+  document.getElementById('rText').value='';
+  setStar(0);loadRevs();
+  toast('🌟 Review submitted! Thank you so much.');
+}
+
+/* ═══════════════════════════════════
+   INIT
+═══════════════════════════════════ */
+loadRevs();
+// trigger first anim items immediately
+document.querySelectorAll('.anim').forEach((el,i)=>{
+  setTimeout(()=>el.classList.add('in'),i*120);
+});
+</script>
+</body>
+</html>
